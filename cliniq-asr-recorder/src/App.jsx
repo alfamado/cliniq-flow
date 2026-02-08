@@ -223,7 +223,7 @@ export default function App() {
     const fetchProgress = async () => {
       try {
         const response = await fetch(
-          `https://cliniq-flow-1.onrender.com//progress/${speakerId}`
+          `https://cliniq-flow-backend.onrender.com/progress/${speakerId}`
         );
         const data = await response.json();
         setCurrentIndex(data.next_sentence - 1);
@@ -289,7 +289,7 @@ export default function App() {
     formData.append("file", audioBlob, "recording.webm");
 
     try {
-      const response = await fetch("https://cliniq-flow-1.onrender.com//upload", {
+      const response = await fetch("https://cliniq-flow-backend.onrender.com/upload", {
         method: "POST",
         body: formData,
       });
