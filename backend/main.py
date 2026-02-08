@@ -404,7 +404,7 @@ Base.metadata.create_all(bind=engine)
 # Allow frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://cliniq-flow.vercel.app"],
+    allow_origins=["http://localhost:5173","https://cliniq-flow.vercel.app", ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
