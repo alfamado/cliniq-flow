@@ -325,6 +325,8 @@ export default function App() {
           <li>4. Avoid background noise.</li>
           <li>5. Click "Stop" after finishing.</li>
           <li>6. Confirm playback, then click "Next".</li>
+          <li>7. Preferably use Google Chrome on laptop</li>
+          <li>8. Allow microphone access</li>
         </ul>
         <p><strong>Please do not paraphrase or modify the sentence.</strong></p>
       </div>
