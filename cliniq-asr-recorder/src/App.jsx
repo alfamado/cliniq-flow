@@ -327,6 +327,7 @@ export default function App() {
           <li>6. Confirm playback, then click "Next".</li>
           <li>7. Preferably use Google Chrome on laptop</li>
           <li>8. Allow microphone access</li>
+          <li>9. If you pick an ID and the sentence doesn't start from 1, Please pick another number</li>
         </ul>
         <p><strong>Please do not paraphrase or modify the sentence.</strong></p>
       </div>
