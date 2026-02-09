@@ -311,7 +311,7 @@ export default function App() {
   return (
     <div style={{ padding: "40px", fontFamily: "Arial" }}>
       <div style={{
-        backgroundColor: "#f4f6f8",
+        backgroundColor: "#000000",
         padding: "15px",
         borderRadius: "8px",
         marginBottom: "20px"
