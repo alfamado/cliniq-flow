@@ -311,10 +311,11 @@ export default function App() {
   return (
     <div style={{ padding: "40px", fontFamily: "Arial" }}>
       <div style={{
-        backgroundColor: "#000000",
+        backgroundColor: "#E32227",
         padding: "15px",
         borderRadius: "8px",
-        marginBottom: "20px"
+        marginBottom: "20px",
+      
       }}>
         <h4>Recording Instructions</h4>
         <ul>
