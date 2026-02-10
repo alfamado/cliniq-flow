@@ -272,7 +272,11 @@ export default function App() {
         const url = URL.createObjectURL(blob);
         setAudioURL(url);
         setIsRecording(false);
+
+        // 🔥 IMPORTANT: stop microphone stream (Safari fix)
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
       };
+
 
       mediaRecorder.start();
       setIsRecording(true);
@@ -386,13 +390,17 @@ export default function App() {
 
       {audioURL && (
         <div style={{ marginTop: "20px" }}>
-          <audio controls src={audioURL}></audio>
+          <audio controls src={audioURL} key={audioURL}></audio>
 
           <div style={{ marginTop: "15px" }}>
             <button
               onClick={() => {
+                if (audioURL) {
+                  URL.revokeObjectURL(audioURL);
+                }
                 setAudioURL(null);
                 chunksRef.current = [];
+
               }}
               style={{
                 backgroundColor: "#facc15",
