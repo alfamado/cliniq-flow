@@ -257,10 +257,16 @@ export default function App() {
 
       mediaRecorder.onstop = async () => {
 
-        let mimeType = "audio/webm";
+        let mimeType = "";
 
-        if (!MediaRecorder.isTypeSupported("audio/webm")) {
-          mimeType = "audio/mp4"; // Safari fallback
+        if (MediaRecorder.isTypeSupported("audio/webm")) {
+          mimeType = "audio/webm";
+        } 
+        else if (MediaRecorder.isTypeSupported("audio/mp4")) {
+          mimeType = "audio/mp4";
+        } 
+        else {
+          mimeType = "audio/wav"; // final fallback
         }
 
         const blob = new Blob(chunksRef.current, { type: mimeType });
@@ -269,6 +275,7 @@ export default function App() {
         setAudioURL(url);
         setIsRecording(false);
       };
+
 
 
       mediaRecorder.start();
@@ -339,6 +346,7 @@ export default function App() {
           <li>7. Preferably use Google Chrome on laptop</li>
           <li>8. Allow microphone access</li>
           <li>9. If you pick an ID and the sentence doesn't start from 1, Please pick another number</li>
+          <li>10. Please open the link directly in Safari, not inside WhatsApp or Mail</li>
         </ul>
         <p><strong>Please do not paraphrase or modify the sentence.</strong></p>
       </div>
