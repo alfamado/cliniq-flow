@@ -256,14 +256,20 @@ export default function App() {
       };
 
       mediaRecorder.onstop = async () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+
+        let mimeType = "audio/webm";
+
+        if (!MediaRecorder.isTypeSupported("audio/webm")) {
+          mimeType = "audio/mp4"; // Safari fallback
+        }
+
+        const blob = new Blob(chunksRef.current, { type: mimeType });
+
         const url = URL.createObjectURL(blob);
         setAudioURL(url);
         setIsRecording(false);
-
-        // Upload automatically after stopping
-        //await uploadAudio(blob);
       };
+
 
       mediaRecorder.start();
       setIsRecording(true);
@@ -286,7 +292,12 @@ export default function App() {
     formData.append("speaker_id", speakerId);
     formData.append("sentence_id", currentIndex + 1);
     formData.append("sentence_text", sentences[currentIndex]);
-    formData.append("file", audioBlob, "recording.webm");
+    formData.append(
+      "file",
+      audioBlob,
+      audioBlob.type.includes("mp4") ? "recording.mp4" : "recording.webm"
+    );
+
 
     try {
       const response = await fetch("https://cliniq-flow-backend.onrender.com/upload", {
