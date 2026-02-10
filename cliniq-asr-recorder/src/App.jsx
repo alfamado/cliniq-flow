@@ -246,7 +246,16 @@ export default function App() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      const mediaRecorder = new MediaRecorder(stream);
+      let mimeType = "";
+
+      if (MediaRecorder.isTypeSupported("audio/mp4")) {
+        mimeType = "audio/mp4";
+      } else if (MediaRecorder.isTypeSupported("audio/webm")) {
+        mimeType = "audio/webm";
+      }
+
+      const options = mimeType ? { mimeType } : {};
+      const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
 
       chunksRef.current = [];
@@ -256,27 +265,14 @@ export default function App() {
       };
 
       mediaRecorder.onstop = async () => {
-
-        let mimeType = "";
-
-        if (MediaRecorder.isTypeSupported("audio/webm")) {
-          mimeType = "audio/webm";
-        } 
-        else if (MediaRecorder.isTypeSupported("audio/mp4")) {
-          mimeType = "audio/mp4";
-        } 
-        else {
-          mimeType = "audio/wav"; // final fallback
-        }
-
-        const blob = new Blob(chunksRef.current, { type: mimeType });
+        const blob = new Blob(chunksRef.current, {
+          type: mediaRecorder.mimeType,
+        });
 
         const url = URL.createObjectURL(blob);
         setAudioURL(url);
         setIsRecording(false);
       };
-
-
 
       mediaRecorder.start();
       setIsRecording(true);
@@ -410,8 +406,9 @@ export default function App() {
             <button
               onClick={async () => {
                 const audioBlob = new Blob(chunksRef.current, {
-                  type: "audio/webm",
+                  type: mediaRecorderRef.current.mimeType,
                 });
+
 
                 await uploadAudio(
                   audioBlob,
