@@ -395,6 +395,8 @@ import os
 
 from database import SessionLocal, engine, Base
 from models import Recording  # your Recording model
+from models import Recording, Speaker
+
 
 app = FastAPI()
 
@@ -427,12 +429,13 @@ async def upload_audio(
     speaker_id: str = Form(...),
     sentence_id: int = Form(...),
     sentence_text: str = Form(...),
+    language: str = Form("English"),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
 
     # Ensure dataset folder exists
-    folder_path = f"dataset/English/{speaker_id}"
+    folder_path = f"dataset/{language}/{speaker_id}"
     os.makedirs(folder_path, exist_ok=True)
 
     file_path = f"{folder_path}/{speaker_id}_{sentence_id}.wav"
@@ -440,6 +443,18 @@ async def upload_audio(
     # Save file
     with open(file_path, "wb") as buffer:
         buffer.write(await file.read())
+
+    # Check if speaker exists
+    speaker = db.query(Speaker).filter(Speaker.speaker_id == speaker_id).first()
+
+    if not speaker:
+        speaker = Speaker(
+            speaker_id=speaker_id,
+            language=language
+        )
+        db.add(speaker)
+        db.commit()
+
 
     # UPSERT (Insert or Update if already exists)
     stmt = insert(Recording).values(
