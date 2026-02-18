@@ -325,6 +325,7 @@
 # import os
 
 # from database import Base, engine, SessionLocal
+# from fastapi.responses import FileResponse
 
 # app = FastAPI()
 
@@ -387,6 +388,295 @@
 
 #     return {"message": "Upload successful"}
 
+# from fastapi import FastAPI, UploadFile, File, Form, Depends
+# from fastapi.middleware.cors import CORSMiddleware
+# from sqlalchemy.orm import Session
+# from sqlalchemy.dialects.postgresql import insert
+# import os
+
+# from database import SessionLocal, engine, Base
+# from models import Recording  # your Recording model
+# from models import Recording, Speaker
+# from routes.upload import router
+
+
+# app = FastAPI()
+
+# app.include_router(router)
+
+# # Create tables (safe if already created)
+# Base.metadata.create_all(bind=engine)
+
+# # Allow frontend access
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["http://localhost:5173","https://cliniq-flow.vercel.app", ],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
+# # Dependency
+# def get_db():
+#     db = SessionLocal()
+#     try:
+#         yield db
+#     finally:
+#         db.close()
+
+
+# # ==============================
+# # Upload Audio (UPSERT Version)
+# # ==============================
+# @app.post("/upload")
+# async def upload_audio(
+#     speaker_id: str = Form(...),
+#     sentence_id: int = Form(...),
+#     sentence_text: str = Form(...),
+#     language: str = Form("English"),
+#     file: UploadFile = File(...),
+#     db: Session = Depends(get_db),
+# ):
+
+#     # Ensure dataset folder exists
+#     folder_path = f"dataset/{language}/{speaker_id}"
+#     os.makedirs(folder_path, exist_ok=True)
+
+#     file_path = f"{folder_path}/{speaker_id}_{sentence_id}.wav"
+
+#     # Save file
+#     with open(file_path, "wb") as buffer:
+#         buffer.write(await file.read())
+
+#     # Check if speaker exists
+#     speaker = db.query(Speaker).filter(Speaker.speaker_id == speaker_id).first()
+
+#     if not speaker:
+#         speaker = Speaker(
+#             speaker_id=speaker_id,
+#             language=language
+#         )
+#         db.add(speaker)
+#         db.commit()
+
+
+#     # UPSERT (Insert or Update if already exists)
+#     stmt = insert(Recording).values(
+#         speaker_id=speaker_id,
+#         sentence_id=sentence_id,
+#         sentence_text=sentence_text,
+#         file_path=file_path,
+#     )
+
+#     stmt = stmt.on_conflict_do_update(
+#         index_elements=["speaker_id", "sentence_id"],
+#         set_={
+#             "sentence_text": sentence_text,
+#             "file_path": file_path,
+#         },
+#     )
+
+#     db.execute(stmt)
+#     db.commit()
+
+#     return {"message": "Saved successfully"}
+
+
+# ==============================
+# Resume Progress Endpoint
+# ==============================
+# @app.get("/progress/{speaker_id}")
+# def get_progress(speaker_id: str, db: Session = Depends(get_db)):
+
+#     last_record = (
+#         db.query(Recording)
+#         .filter(Recording.speaker_id == speaker_id)
+#         .order_by(Recording.sentence_id.desc())
+#         .first()
+#     )
+
+#     if last_record:
+#         return {"next_sentence": last_record.sentence_id + 1}
+
+#     return {"next_sentence": 1}
+
+
+# from fastapi import FastAPI, UploadFile, File, Form, Depends
+# from fastapi.middleware.cors import CORSMiddleware
+# from sqlalchemy.orm import Session
+# from sqlalchemy.dialects.postgresql import insert
+# import os
+# import re
+
+# from database import SessionLocal, engine, Base
+# from models import Recording, Speaker
+# from fastapi.responses import FileResponse
+# import shutil
+
+
+# app = FastAPI()
+
+
+# # ==============================
+# # Create tables (safe if exist)
+# # ==============================
+# Base.metadata.create_all(bind=engine)
+
+
+# # ==============================
+# # CORS
+# # ==============================
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=[
+#         "http://localhost:5173",
+#         "https://cliniq-flow.vercel.app",
+#     ],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
+
+# # ==============================
+# # Dependency
+# # ==============================
+# def get_db():
+#     db = SessionLocal()
+#     try:
+#         yield db
+#     finally:
+#         db.close()
+
+
+# # ==============================
+# # Upload Audio (DB + Structured Dataset)
+# # ==============================
+# @app.post("/upload")
+# async def upload_audio(
+#     speaker_id: str = Form(...),
+#     sentence_id: int = Form(...),
+#     sentence_text: str = Form(...),
+#     language: str = Form(...),
+#     role: str = Form(...),
+#     file: UploadFile = File(...),
+#     db: Session = Depends(get_db),
+# ):
+
+#     language = language.lower()
+#     role = role.lower()
+
+#     if not re.fullmatch(r"SPK\d{3}", speaker_id):
+#         return {"error": "Speaker ID must be in format SPK001, SPK002, etc."}
+
+#     allowed_languages = ["english", "yoruba", "pidgin"]
+#     allowed_roles = ["doctor", "patient"]
+
+#     if language not in allowed_languages:
+#         return {"error": "Invalid language selected"}
+
+#     if role not in allowed_roles:
+#         return {"error": "Invalid role selected"}
+
+#     # ==============================
+#     # Save audio file
+#     # ==============================
+#     folder_path = f"dataset/{language}/{role}/{speaker_id}"
+#     os.makedirs(folder_path, exist_ok=True)
+
+#     file_path = f"{folder_path}/{speaker_id}_{sentence_id}.wav"
+
+#     with open(file_path, "wb") as buffer:
+#         buffer.write(await file.read())
+
+#     # ==============================
+#     # Ensure Speaker exists
+#     # ==============================
+#     # speaker = db.query(Speaker).filter(
+#     #     Speaker.speaker_id == speaker_id
+#     # ).first()
+
+#     # if not speaker:
+#     #     speaker = Speaker(
+#     #         speaker_id=speaker_id,
+#     #         language=language
+#     #     )
+#     #     db.add(speaker)
+#     #     db.commit()
+
+#     existing_speaker = db.query(Speaker).filter(
+#         Speaker.speaker_id == speaker_id
+#     ).first()
+
+#     if not existing_speaker:
+#         speaker = Speaker(
+#             speaker_id=speaker_id,
+#             language=language  # first language they used
+#         )
+#         db.add(speaker)
+#         db.commit()
+
+
+#     # ==============================
+#     # UPSERT Recording
+#     # ==============================
+#     stmt = insert(Recording).values(
+#         speaker_id=speaker_id,
+#         sentence_id=sentence_id,
+#         sentence_text=sentence_text,
+#         file_path=file_path,
+#     )
+
+#     stmt = stmt.on_conflict_do_update(
+#         index_elements=["speaker_id", "sentence_id"],
+#         set_={
+#             "sentence_text": sentence_text,
+#             "file_path": file_path,
+#         },
+#     )
+
+#     db.execute(stmt)
+#     db.commit()
+
+#     return {"message": "Saved successfully"}
+
+
+# # ==============================
+# # Resume Progress (Language + Role aware)
+# # ==============================
+# @app.get("/progress/{speaker_id}")
+# def get_progress(
+#     speaker_id: str,
+#     language: str,
+#     role: str,
+#     db: Session = Depends(get_db)
+# ):
+
+#     language = language.lower()
+#     role = role.lower()
+
+#     last_record = (
+#         db.query(Recording)
+#         .filter(Recording.speaker_id == speaker_id)
+#         .filter(Recording.file_path.contains(f"/{language}/{role}/"))
+#         .order_by(Recording.sentence_id.desc())
+#         .first()
+#     )
+
+#     if last_record:
+#         return {"next_sentence": last_record.sentence_id + 1}
+
+#     return {"next_sentence": 1}
+
+# @app.get("/download-dataset")
+# def download_dataset():
+#     zip_path = "dataset_backup.zip"
+#     shutil.make_archive("dataset_backup", "zip", "dataset")
+#     return FileResponse(zip_path, media_type="application/zip", filename="dataset_backup.zip")
+
+
+
+
 from fastapi import FastAPI, UploadFile, File, Form, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -396,6 +686,8 @@ import os
 from database import SessionLocal, engine, Base
 from models import Recording  # your Recording model
 from models import Recording, Speaker
+from fastapi.responses import FileResponse
+import shutil
 
 
 app = FastAPI()
@@ -495,3 +787,11 @@ def get_progress(speaker_id: str, db: Session = Depends(get_db)):
         return {"next_sentence": last_record.sentence_id + 1}
 
     return {"next_sentence": 1}
+
+@app.get("/download-dataset")
+def download_dataset():
+    if not os.path.exists("dataset"):
+        return {"error": "Dataset folder not found"}
+
+    shutil.make_archive("dataset_backup", "zip", "dataset")
+    return FileResponse("dataset_backup.zip", media_type="application/zip", filename="dataset_backup.zip")
