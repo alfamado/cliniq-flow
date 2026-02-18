@@ -791,7 +791,7 @@ def get_progress(speaker_id: str, db: Session = Depends(get_db)):
 @app.get("/download-dataset")
 def download_dataset():
     if not os.path.exists("dataset"):
-        return {"error": "Dataset folder not found"}
+        return {"error": "Dataset folder not found in disk"}
 
     shutil.make_archive("dataset_backup", "zip", "dataset")
     return FileResponse("dataset_backup.zip", media_type="application/zip", filename="dataset_backup.zip")
