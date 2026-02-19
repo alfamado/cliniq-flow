@@ -984,7 +984,7 @@ async def upload_audio(
     )
 
     stmt = stmt.on_conflict_do_update(
-        index_elements=["speaker_id", "sentence_id"],
+        index_elements=["speaker_id", "sentence_id", "language", "role"],
         set_={
             "sentence_text": sentence_text,
             "file_path": public_url,
