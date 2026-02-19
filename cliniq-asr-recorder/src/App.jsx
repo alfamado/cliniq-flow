@@ -2728,7 +2728,7 @@ export default function App() {
       </div>
 
       {/* TEXT DISPLAY */}
-      <div style={{ minHeight: "120px", background: "#ffffff", border: "2px solid #E32227", padding: "20px", borderRadius: "8px", marginBottom: "20px", textAlign: "center" }}>
+      <div style={{ minHeight: "120px", background: "#E32227", border: "2px solid #ffffff", padding: "20px", borderRadius: "8px", marginBottom: "20px", textAlign: "center" }}>
         {sessionId ? (
           <div style={{ color: "#28a745" }}>
             <h3 style={{ margin: "0" }}>CONVERSATION MODE ACTIVE</h3>
@@ -2736,7 +2736,7 @@ export default function App() {
           </div>
         ) : (
           <>
-            <span style={{ color: "#28a745", fontSize: "11px", fontWeight: "bold" }}>SENTENCE {currentIndex + 1}</span>
+            <span style={{ color: "#212529", fontSize: "11px", fontWeight: "bold" }}>SENTENCE {currentIndex + 1}</span>
             <p style={{ fontSize: "20px", fontWeight: "bold", margin: "10px 0", lineHeight: "1.4" }}>
               {sentences[language]?.[role]?.[currentIndex] || "Loading script..."}
             </p>
