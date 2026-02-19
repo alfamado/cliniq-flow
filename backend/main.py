@@ -861,7 +861,7 @@ import os
 import re
 
 from database import SessionLocal, engine, Base
-from models import Recording, Speaker
+from models import Recording, Speaker, Conversation
 from supabase_client import supabase
 
 app = FastAPI()
@@ -1023,3 +1023,89 @@ def get_progress(
         return {"next_sentence": last_record.sentence_id + 1}
 
     return {"next_sentence": 1}
+
+@app.post("/upload-conversation/")
+async def upload_conversation(
+    session_id: str = Form(...),
+    speaker_id: str = Form(...),
+    role: str = Form(...),
+    duration_seconds: int = Form(None),
+    language: str = Form(...),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    try:
+        # 1. Read the file data
+        file_content = await file.read()
+        
+        # 2. Define the Supabase Path
+        # Pattern: conversations/yoruba/SESS-001/doctor_SPK001.wav
+        storage_path = f"conversations/{language.lower()}/{session_id}/{role.lower()}_{speaker_id}.wav"
+        
+        # 3. Upload to Supabase (Bucket name: 'audio-recordings')
+        supabase.storage.from_("audio-recordings").upload(
+            path=storage_path,
+            file=file_content,
+            file_options={"content-type": "audio/wav", "upsert": "true"}
+        )
+        
+        # 4. Generate the Public URL
+        public_url = f"{os.getenv('SUPABASE_URL')}/storage/v1/object/public/audio-recordings/{storage_path}"
+
+        # 5. Save/Update in Database
+        stmt = insert(Conversation).values(
+            session_id=session_id,
+            speaker_id=speaker_id,
+            role=role.lower(),
+            language=language.lower(),
+            duration_seconds=duration_seconds,
+            file_path=public_url
+        )
+        
+        # If the speaker uploads again for the SAME session, update the file path
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["session_id", "speaker_id"],
+            set_={
+                "file_path": public_url,
+                "duration_seconds": duration_seconds
+                }
+        )
+
+        db.execute(stmt)
+        db.commit()
+
+        return {"status": "success", "url": public_url}
+
+    except Exception as e:
+        db.rollback()
+        print(f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# @app.post("/upload-conversation/")
+# async def upload_conversation(
+#     session_id: str = Form(...),
+#     speaker_id: str = Form(...),
+#     role: str = Form(...),
+#     language: str = Form(...),
+#     file: UploadFile = File(...),
+#     db: Session = Depends(get_db)
+# ):
+#     # 1. Upload to Supabase 'conversations' bucket
+#     file_path = f"conversations/{language}/{session_id}/{role}_{speaker_id}.wav"
+#     # ... (Insert your Supabase upload logic here)
+
+#     # 2. Save to DB with ON CONFLICT for session_id + speaker_id
+#     stmt = insert(Conversation).values(
+#         session_id=session_id,
+#         speaker_id=speaker_id,
+#         role=role,
+#         language=language,
+#         file_path=public_url
+#     ).on_conflict_do_update(
+#         index_elements=["session_id", "speaker_id"],
+#         set_={"file_path": public_url}
+#     )
+    
+#     db.execute(stmt)
+#     db.commit()
+#     return {"message": "Conversation segment saved!"}
