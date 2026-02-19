@@ -2698,7 +2698,7 @@ export default function App() {
   /* =========================
     UI
     ========================= */
-
+    
   return (
     <div style={{ padding: "40px", fontFamily: "Arial" }}>
       <div
@@ -2722,8 +2722,7 @@ export default function App() {
         </ul>
         <p><strong>Do not paraphrase.</strong></p>
       </div>  
-  return (
-    <div style={{ padding: "40px", fontFamily: "Arial" }}>
+    
       <h2>CLINIQ-FLOW Voice Recorder</h2>
 
       <input
