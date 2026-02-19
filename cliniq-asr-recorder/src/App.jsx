@@ -2698,6 +2698,30 @@ export default function App() {
   /* =========================
     UI
     ========================= */
+
+  return (
+    <div style={{ padding: "40px", fontFamily: "Arial" }}>
+      <div
+        style={{
+          backgroundColor: "#E32227",
+          padding: "15px",
+          borderRadius: "8px",
+          marginBottom: "20px",
+          color: "white"
+        }}
+      >
+        <h4>Recording Instructions</h4>
+        <ul>
+          <li>1. Enter your Speaker ID.</li>
+          <li>2. Select language and role.</li>
+          <li>3. Click Start and read EXACTLY as written.</li>
+          <li>4. Speak clearly at normal clinical speed.</li>
+          <li>5. Avoid background noise.</li>
+          <li>6. Stop → Confirm playback → Save & Next.</li>
+          <li>7. Use Chrome or Safari directly (not inside WhatsApp).</li>
+        </ul>
+        <p><strong>Do not paraphrase.</strong></p>
+      </div>  
   return (
     <div style={{ padding: "40px", fontFamily: "Arial" }}>
       <h2>CLINIQ-FLOW Voice Recorder</h2>
@@ -2730,7 +2754,7 @@ export default function App() {
       {error && <p style={{ color: "red", fontWeight: "bold" }}>{error}</p>}
 
       <h3>Sentence {currentIndex + 1} / {totalSentences}</h3>
-      <p style={{ fontSize: "18px", marginBottom: "20px", background: "#f3f4f6", padding: "15px", borderRadius: "8px" }}>
+      <p style={{ fontSize: "18px", marginBottom: "20px", background: "#E32227", padding: "15px", borderRadius: "8px" }}>
         {totalSentences > 0 ? sentences[language][role][currentIndex] : "No sentences available."}
       </p>
 
