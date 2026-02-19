@@ -740,8 +740,6 @@
 
 import React, { useState, useRef, useEffect } from "react";
 
-export default function App() {
-
   /* =========================
      SENTENCE STRUCTURE
      ========================= */
@@ -2573,492 +2571,286 @@ export default function App() {
      STATE
      ========================= */
 
+export default function App() {
   const [language, setLanguage] = useState("english");
   const [role, setRole] = useState("doctor");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [speakerId, setSpeakerId] = useState("");
+  const [sessionId, setSessionId] = useState(""); 
   const [audioURL, setAudioURL] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [isUploading, setIsUploading] = useState(false); // New: prevents double clicks
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
+  const [startTime, setStartTime] = useState(null);
+  const [recordedDuration, setRecordedDuration] = useState(null);
 
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
 
-  /* =========================
-    FETCH PROGRESS
-    ========================= */
+  const generateSessionId = () => {
+    const date = new Date().toISOString().split('T')[0]; // 2026-02-19
+    const randomStr = Math.random().toString(36).substring(2, 7).toUpperCase(); // e.g., XJ92L
+    const finalId = `SESS-${date}-${randomStr}`; 
+    setSessionId(finalId);
+  };
+
   useEffect(() => {
     if (!speakerId || !speakerId.match(/^SPK\d{3}$/)) return;
-
     const fetchProgress = async () => {
       try {
-        const response = await fetch(
-          `https://cliniq-flow-backend.onrender.com/progress/${speakerId}?language=${language}&role=${role}`
-        );
+        const response = await fetch(`https://cliniq-flow-backend.onrender.com/progress/${speakerId}?language=${language}&role=${role}`);
         const data = await response.json();
-        if (data.next_sentence) {
-          setCurrentIndex(data.next_sentence - 1);
-        }
-      } catch (error) {
-        console.error("Error fetching progress:", error);
-      }
+        if (data.next_sentence) setCurrentIndex(data.next_sentence - 1);
+      } catch (err) { console.error(err); }
     };
-
     fetchProgress();
   }, [speakerId, language, role]);
 
-  /* =========================
-    RECORDING
-    ========================= */
   const startRecording = async () => {
     setError("");
     if (!speakerId.match(/^SPK\d{3}$/)) {
-      setError("Speaker ID must be in format SPK001, SPK002, etc.");
+      setError("ERROR: Enter Speaker ID first (e.g., SPK001)");
       return;
     }
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      let mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
-      
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
-      mediaRecorderRef.current = mediaRecorder;
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
+      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType });
       chunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) chunksRef.current.push(event.data);
-      };
-
-      mediaRecorder.onstop = () => {
+      mediaRecorderRef.current.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      mediaRecorderRef.current.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        setAudioURL(url);
+        if (startTime) setRecordedDuration((Date.now() - startTime) / 1000);
+        setAudioURL(URL.createObjectURL(blob));
         setIsRecording(false);
-        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach(t => t.stop());
       };
-
-      mediaRecorder.start();
+      setStartTime(Date.now());
+      mediaRecorderRef.current.start();
       setIsRecording(true);
-    } catch (err) {
-      setError("Microphone permission denied.");
-    }
+    } catch (err) { setError("Mic Error: Please allow microphone access."); }
   };
 
-  const stopRecording = () => {
-    if (mediaRecorderRef.current) mediaRecorderRef.current.stop();
-  };
-
-  /* =========================
-    UPLOAD
-    ========================= */
-  const uploadAudio = async (audioBlob) => {
+  const uploadAudio = async (audioBlob, durationSeconds) => {
     setIsUploading(true);
-    setError("");
-    const formData = new FormData();
-
-    formData.append("speaker_id", speakerId.toUpperCase());
-    formData.append("sentence_id", currentIndex + 1);
-    formData.append("sentence_text", sentences[language][role][currentIndex]);
-    formData.append("language", language);
-    formData.append("role", role);
+    const isConvMode = sessionId && sessionId.trim() !== "";
+    const endpoint = isConvMode 
+      ? "https://cliniq-flow-backend.onrender.com/upload-conversation/" 
+      : "https://cliniq-flow-backend.onrender.com/upload/";
     
-    // Ensures backend gets a valid file extension
-    const extension = audioBlob.type.includes("mp4") ? "m4a" : "webm";
-    formData.append("file", audioBlob, `${speakerId}_${currentIndex + 1}.${extension}`);
+    const formData = new FormData();
+    formData.append("speaker_id", speakerId.toUpperCase());
+    formData.append("role", role);
+    formData.append("language", language);
+
+    if (isConvMode) {
+      formData.append("session_id", sessionId);
+      formData.append("duration_seconds", Math.round(durationSeconds || 0));
+      formData.append("file", audioBlob, `conv_${Date.now()}.wav`);
+    } else {
+      formData.append("sentence_id", currentIndex + 1);
+      formData.append("sentence_text", sentences[language][role][currentIndex]);
+      formData.append("file", audioBlob, `sent_${currentIndex + 1}.wav`);
+    }
 
     try {
-      const response = await fetch("https://cliniq-flow-backend.onrender.com/upload/", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.detail || "Upload failed");
-      }
-
+      const res = await fetch(endpoint, { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Upload failed. Check internet.");
       setIsUploading(false);
       return true;
-    } catch (error) {
-      setError(error.message);
+    } catch (err) {
+      setError(err.message);
       setIsUploading(false);
       return false;
     }
   };
 
-  const nextSentence = () => {
-    setAudioURL(null);
-    setCurrentIndex((prev) => prev + 1);
-    chunksRef.current = [];
-  };
-
-  const totalSentences = sentences[language]?.[role]?.length || 0;
-
-  /* =========================
-    UI
-    ========================= */
-    
   return (
-    <div style={{ padding: "40px", fontFamily: "Arial" }}>
-      <div
-        style={{
-          backgroundColor: "#E32227",
-          padding: "15px",
-          borderRadius: "8px",
-          marginBottom: "20px",
-          color: "white"
+    <div style={{ padding: "20px", maxWidth: "600px", margin: "auto", fontFamily: "sans-serif" }}>
+      <h1 style={{ textAlign: "center", color: "#E32227" }}>CLINIQ-FLOW</h1>
+
+      {/* THE CRUCIAL INSTRUCTIONS */}
+      <div style={{ backgroundColor: "#fff3cd", border: "1px solid #ffeeba", padding: "15px", borderRadius: "8px", marginBottom: "20px", fontSize: "14px" }}>
+        <h4 style={{ margin: "0 0 10px 0" }}>IMPORTANT INSTRUCTIONS</h4>
+        <ul style={{ margin: 0, paddingLeft: "20px" }}>
+          <li>Ensure you are in a <strong>quiet room</strong>.</li>
+          <li>Enter <strong>Speaker ID</strong> first (e.g., SPK001).</li>
+          <li>Click <strong>START RECORDING</strong>, wait 1 second, then speak clearly.</li>
+          <li>Click <strong>STOP RECORDING</strong> immediately after you finish speaking.</li>
+          <li><strong>Conversation Mode:</strong> Use "Generate ID" ONLY for free-form talking. Otherwise, leave it empty.</li>
+          <li>Listen to your recording before clicking <strong>SAVE & NEXT</strong>.</li>
+        </ul>
+      </div>
+
+      {/* PRIMARY INPUTS */}
+      <div style={{ marginBottom: "20px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
+        <div style={{ flex: "1", minWidth: "200px" }}>
+          <label style={{ fontSize: "12px", fontWeight: "bold" }}>SPEAKER ID</label>
+          <input 
+            placeholder="e.g. SPK001" 
+            value={speakerId} 
+            onChange={(e)=>setSessionId("") || setSpeakerId(e.target.value.toUpperCase())} 
+            style={{ width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc", boxSizing: "border-box" }}
+          />
+        </div>
+        <div>
+          <label style={{ fontSize: "12px", fontWeight: "bold" }}>LANGUAGE</label>
+          <select value={language} onChange={(e)=>setLanguage(e.target.value)} style={{ display: "block", padding: "10px", width: "100%" }}>
+            <option value="english">English</option>
+            <option value="yoruba">Yoruba</option>
+            <option value="pidgin">Pidgin</option>
+            <option value="mixed">Mixed (Conv. Only)</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ fontSize: "12px", fontWeight: "bold" }}>ROLE</label>
+          <select value={role} onChange={(e)=>setRole(e.target.value)} style={{ display: "block", padding: "10px", width: "100%" }}>
+            <option value="doctor">Doctor</option>
+            <option value="patient">Patient</option>
+          </select>
+        </div>
+      </div>
+
+      {/* SESSION CONFIGURATION */}
+      <div style={{ backgroundColor: "#f8f9fa", padding: "20px", borderRadius: "10px", border: "2px solid #dee2e6", marginBottom: "25px" }}>
+        <label style={{ fontSize: "14px", fontWeight: "bold", color: "#333", display: "block", marginBottom: "10px" }}>
+          STEP 2: CHOOSE YOUR MODE
+        </label>
+        
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          
+          {/* Option A: Sentences */}
+          {!sessionId && (
+            <div style={{ padding: "10px", border: "1px dashed #ccc", borderRadius: "5px", backgroundColor: "#fff" }}>
+              <p style={{ margin: 0, fontSize: "13px", color: "#666" }}>
+                <strong>Current Mode:</strong> Reading Sentences (Script is visible below)
+              </p>
+            </div>
+          )}
+
+          {/* THE BIG BUTTON */}
+          <button 
+            onClick={generateSessionId} 
+            style={{ 
+              width: "100%", 
+              padding: "12px", 
+              backgroundColor: "#007bff", 
+              color: "white", 
+              border: "none", 
+              borderRadius: "5px", 
+              fontWeight: "bold",
+              cursor: "pointer",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+            }}
+          >
+            CLICK HERE FOR CONVERSATION MODE (FREE TALKING)
+          </button>
+
+          {/* THE INPUT BOX */}
+          <div style={{ marginTop: "5px" }}>
+            <label style={{ fontSize: "11px", color: "#555" }}>SESSION ID (Auto-fills when you click the blue button):</label>
+            <input 
+              value={sessionId} 
+              onChange={(e)=>setSessionId(e.target.value)} 
+              placeholder="--- EMPTY (SENTENCE MODE) ---" 
+              style={{ 
+                width: "100%", 
+                marginTop: "5px", 
+                padding: "12px", 
+                border: "2px solid " + (sessionId ? "#28a745" : "#ccc"), 
+                borderRadius: "5px", 
+                boxSizing: "border-box",
+                textAlign: "center",
+                fontWeight: "bold",
+                backgroundColor: sessionId ? "#eafff0" : "#fff"
+              }}
+            />
+          </div>
+
+          {sessionId && (
+            <button 
+              onClick={() => setSessionId("")} 
+              style={{ fontSize: "12px", color: "#dc3545", background: "none", border: "none", textDecoration: "underline", cursor: "pointer" }}
+            >
+              Switch back to Sentence Mode (Clear ID)
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* TEXT TO READ AREA */}
+      <div style={{ minHeight: "120px", background: "#ffffff", border: "2px solid #E32227", padding: "20px", borderRadius: "8px", marginBottom: "20px", textAlign: "center" }}>
+        {sessionId ? (
+          <div style={{ color: "#28a745" }}>
+            <h3 style={{ margin: "0" }}>CONVERSATION MODE ACTIVE</h3>
+            <p style={{ color: "#666", fontSize: "14px" }}>Script hidden. Record natural conversation between Doctor and Patient.</p>
+          </div>
+        ) : (
+          <>
+            <span style={{ color: "#666", fontSize: "11px", fontWeight: "bold" }}>CURRENT SENTENCE: {currentIndex + 1}</span>
+            <p style={{ fontSize: "22px", fontWeight: "bold", margin: "10px 0", lineHeight: "1.4" }}>
+              {sentences[language]?.[role]?.[currentIndex] || "Select a language to load script."}
+            </p>
+          </>
+        )}
+      </div>
+
+      {/* RECORDING CONTROLS */}
+      <button 
+        onClick={isRecording ? () => mediaRecorderRef.current.stop() : startRecording}
+        style={{ 
+          width: "100%", 
+          padding: "20px", 
+          fontSize: "18px", 
+          fontWeight: "bold", 
+          backgroundColor: isRecording ? "#dc3545" : "#212529", 
+          color: "white", 
+          border: "none", 
+          borderRadius: "8px", 
+          cursor: "pointer" 
         }}
       >
-        <h4>Recording Instructions</h4>
-        <ul>
-          <li>1. Enter your Speaker ID.</li>
-          <li>2. Select language and role.</li>
-          <li>3. Click Start and read EXACTLY as written.</li>
-          <li>4. Speak clearly at normal clinical speed.</li>
-          <li>5. Avoid background noise.</li>
-          <li>6. Stop → Confirm playback → Save & Next.</li>
-          <li>7. Use Chrome or Safari directly (not inside WhatsApp).</li>
-        </ul>
-        <p><strong>Do not paraphrase.</strong></p>
-      </div>  
-    
-      <h2>CLINIQ-FLOW Voice Recorder</h2>
+        {isRecording ? "STOP RECORDING" : "START RECORDING"}
+      </button>
 
-      <input
-        type="text"
-        placeholder="Enter Speaker ID (e.g. SPK001)"
-        value={speakerId}
-        onChange={(e) => setSpeakerId(e.target.value.toUpperCase())}
-        style={{ padding: "8px", marginBottom: "20px", width: "300px", border: error.includes("ID") ? "2px solid red" : "1px solid #ccc" }}
-      />
-
-      <div style={{ marginBottom: "15px" }}>
-        <label>Language: </label>
-        <select value={language} onChange={(e) => { setLanguage(e.target.value); setCurrentIndex(0); }}>
-          <option value="english">English</option>
-          <option value="yoruba">Yoruba</option>
-          <option value="pidgin">Pidgin</option>
-        </select>
-      </div>
-
-      <div style={{ marginBottom: "20px" }}>
-        <label>Role: </label>
-        <select value={role} onChange={(e) => { setRole(e.target.value); setCurrentIndex(0); }}>
-          <option value="doctor">Doctor</option>
-          <option value="patient">Patient</option>
-        </select>
-      </div>
-
-      {error && <p style={{ color: "red", fontWeight: "bold" }}>{error}</p>}
-
-      <h3>Sentence {currentIndex + 1} / {totalSentences}</h3>
-      <p style={{ fontSize: "18px", marginBottom: "20px", background: "#E32227", padding: "15px", borderRadius: "8px" }}>
-        {totalSentences > 0 ? sentences[language][role][currentIndex] : "No sentences available."}
-      </p>
-
-      <button onClick={startRecording} disabled={isRecording || isUploading}>Start</button>
-      <button onClick={stopRecording} disabled={!isRecording} style={{ marginLeft: "10px" }}>Stop</button>
-
-      {isRecording && <p style={{ color: "red", marginTop: "15px" }}>🔴 Recording...</p>}
-
+      {/* REVIEW AND UPLOAD */}
       {audioURL && (
-        <div style={{ marginTop: "20px" }}>
-          <audio controls src={audioURL} key={audioURL}></audio>
-          <div style={{ marginTop: "15px" }}>
-            <button 
-              disabled={isUploading}
-              onClick={() => { setAudioURL(null); chunksRef.current = []; }}
-              style={{ backgroundColor: "#facc15", padding: "8px 12px", marginRight: "10px" }}
-            >
-              Re-record
-            </button>
+        <div style={{ marginTop: "20px", padding: "15px", border: "1px solid #ddd", borderRadius: "8px", backgroundColor: "#fff" }}>
+          <label style={{ fontSize: "12px", fontWeight: "bold", display: "block", marginBottom: "5px" }}>REVIEW RECORDING:</label>
+          <audio src={audioURL} controls style={{ width: "100%" }} />
+          
+          <button 
+            onClick={async () => {
+              const blob = new Blob(chunksRef.current, {type: mediaRecorderRef.current.mimeType});
+              if (await uploadAudio(blob, recordedDuration)) {
+                setAudioURL(null);
+                if (!sessionId) setCurrentIndex(prev => prev + 1);
+                alert("Saved Successfully!");
+              }
+            }}
+            disabled={isUploading}
+            style={{ 
+              width: "100%", 
+              marginTop: "15px", 
+              padding: "15px", 
+              backgroundColor: "#28a745", 
+              color: "white", 
+              border: "none", 
+              borderRadius: "8px", 
+              fontWeight: "bold",
+              cursor: isUploading ? "not-allowed" : "pointer"
+            }}
+          >
+            {isUploading ? "UPLOADING..." : "SAVE & NEXT"}
+          </button>
+        </div>
+      )}
 
-            <button
-              disabled={isUploading}
-              onClick={async () => {
-                const audioBlob = new Blob(chunksRef.current, { type: mediaRecorderRef.current.mimeType });
-                const success = await uploadAudio(audioBlob);
-                if (success) nextSentence();
-              }}
-              style={{ backgroundColor: isUploading ? "#9ca3af" : "#22c55e", color: "white", padding: "8px 12px" }}
-            >
-              {isUploading ? "Uploading..." : "Save & Next"}
-            </button>
-          </div>
+      {error && (
+        <div style={{ color: "#dc3545", textAlign: "center", fontWeight: "bold", marginTop: "15px", padding: "10px", border: "1px solid #dc3545", borderRadius: "5px" }}>
+          {error}
         </div>
       )}
     </div>
   );
 }
-
-//   const [language, setLanguage] = useState("english");
-//   const [role, setRole] = useState("doctor");
-//   const [currentIndex, setCurrentIndex] = useState(0);
-//   const [speakerId, setSpeakerId] = useState("");
-//   const [audioURL, setAudioURL] = useState(null);
-//   const [isRecording, setIsRecording] = useState(false);
-//   const [error, setError] = useState("");
-
-//   const mediaRecorderRef = useRef(null);
-//   const chunksRef = useRef([]);
-
-//   /* =========================
-//      FETCH PROGRESS
-//      ========================= */
-
-//   useEffect(() => {
-//     if (!speakerId) return;
-
-//     const fetchProgress = async () => {
-//       try {
-//         const response = await fetch(
-//           `https://cliniq-flow-backend.onrender.com/progress/${speakerId}?language=${language}&role=${role}`
-//         );
-//         const data = await response.json();
-//         setCurrentIndex(data.next_sentence - 1);
-//       } catch (error) {
-//         console.error("Error fetching progress:", error);
-//       }
-//     };
-
-//     fetchProgress();
-//   }, [speakerId, language, role]);
-
-//   /* =========================
-//      RECORDING
-//      ========================= */
-
-//   const startRecording = async () => {
-//     setError("");
-
-//     if (!speakerId) {
-//       setError("Please enter Speaker ID first.");
-//       return;
-//     }
-
-//     try {
-//       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-//       let mimeType = "";
-
-//       if (MediaRecorder.isTypeSupported("audio/mp4")) {
-//         mimeType = "audio/mp4";
-//       } else if (MediaRecorder.isTypeSupported("audio/webm")) {
-//         mimeType = "audio/webm";
-//       }
-
-//       const options = mimeType ? { mimeType } : {};
-//       const mediaRecorder = new MediaRecorder(stream, options);
-//       mediaRecorderRef.current = mediaRecorder;
-
-//       chunksRef.current = [];
-
-//       mediaRecorder.ondataavailable = (event) => {
-//         chunksRef.current.push(event.data);
-//       };
-
-//       mediaRecorder.onstop = async () => {
-//         const blob = new Blob(chunksRef.current, {
-//           type: mediaRecorder.mimeType,
-//         });
-
-//         const url = URL.createObjectURL(blob);
-//         setAudioURL(url);
-//         setIsRecording(false);
-
-//         // Stop mic (Safari fix)
-//         mediaRecorder.stream.getTracks().forEach(track => track.stop());
-//       };
-
-//       mediaRecorder.start();
-//       setIsRecording(true);
-
-//     } catch (err) {
-//       console.error(err);
-//       setError("Microphone permission denied or not available.");
-//     }
-//   };
-
-//   const stopRecording = () => {
-//     if (mediaRecorderRef.current) {
-//       mediaRecorderRef.current.stop();
-//     }
-//   };
-
-//   /* =========================
-//      UPLOAD
-//      ========================= */
-
-//   const uploadAudio = async (audioBlob) => {
-//     const formData = new FormData();
-
-//     formData.append("speaker_id", speakerId);
-//     formData.append("sentence_id", currentIndex + 1);
-//     formData.append(
-//       "sentence_text",
-//       sentences[language][role][currentIndex]
-//     );
-//     formData.append("language", language);
-//     formData.append("role", role);
-//     formData.append(
-//       "file",
-//       audioBlob,
-//       audioBlob.type.includes("mp4") ? "recording.mp4" : "recording.webm"
-//     );
-
-//     try {
-//       const response = await fetch(
-//         "https://cliniq-flow-backend.onrender.com/upload",
-//         {
-//           method: "POST",
-//           body: formData,
-//         }
-//       );
-
-//       const data = await response.json();
-//       console.log("Upload success:", data);
-
-//     } catch (error) {
-//       console.error("Upload error:", error);
-//     }
-//   };
-
-//   const nextSentence = () => {
-//     const next = currentIndex + 1;
-//     setAudioURL(null);
-//     setCurrentIndex(next);
-//   };
-
-//   const totalSentences =
-//     sentences[language] &&
-//     sentences[language][role]
-//       ? sentences[language][role].length
-//       : 0;
-
-//   /* =========================
-//      UI
-//      ========================= */
-
-//   return (
-//     <div style={{ padding: "40px", fontFamily: "Arial" }}>
-
-//       <h2>CLINIQ-FLOW Voice Recorder</h2>
-
-//       {/* Speaker ID */}
-//       <input
-//         type="text"
-//         placeholder="Enter Speaker ID (e.g. DOC01)"
-//         value={speakerId}
-//         onChange={(e) => setSpeakerId(e.target.value)}
-//         style={{ padding: "8px", marginBottom: "20px", width: "300px" }}
-//       />
-
-//       {/* Language */}
-//       <div style={{ marginBottom: "15px" }}>
-//         <label>Select Language: </label>
-//         <select
-//           value={language}
-//           onChange={(e) => {
-//             setLanguage(e.target.value);
-//             setCurrentIndex(0);
-//           }}
-//         >
-//           <option value="english">English</option>
-//           <option value="yoruba">Yoruba</option>
-//           <option value="pidgin">Pidgin</option>
-//         </select>
-//       </div>
-
-//       {/* Role */}
-//       <div style={{ marginBottom: "20px" }}>
-//         <label>Select Role: </label>
-//         <select
-//           value={role}
-//           onChange={(e) => {
-//             setRole(e.target.value);
-//             setCurrentIndex(0);
-//           }}
-//         >
-//           <option value="doctor">Doctor</option>
-//           <option value="patient">Patient</option>
-//         </select>
-//       </div>
-
-//       {error && <p style={{ color: "red" }}>{error}</p>}
-
-//       <h3>
-//         Sentence {currentIndex + 1} / {totalSentences}
-//       </h3>
-
-//       <p style={{ fontSize: "18px", marginBottom: "20px" }}>
-//         {totalSentences > 0
-//           ? sentences[language][role][currentIndex]
-//           : "No sentences available."}
-//       </p>
-
-//       {/* Recording Buttons */}
-//       <button onClick={startRecording} disabled={isRecording}>
-//         Start
-//       </button>
-
-//       <button
-//         onClick={stopRecording}
-//         disabled={!isRecording}
-//         style={{ marginLeft: "10px" }}
-//       >
-//         Stop
-//       </button>
-
-//       {isRecording && (
-//         <p style={{ color: "red", marginTop: "15px" }}>
-//           🔴 Recording in progress...
-//         </p>
-//       )}
-
-//       {audioURL && (
-//         <div style={{ marginTop: "20px" }}>
-//           <audio controls src={audioURL} key={audioURL}></audio>
-
-//           <div style={{ marginTop: "15px" }}>
-//             <button
-//               onClick={() => {
-//                 if (audioURL) {
-//                   URL.revokeObjectURL(audioURL);
-//                 }
-//                 setAudioURL(null);
-//                 chunksRef.current = [];
-//               }}
-//               style={{
-//                 backgroundColor: "#facc15",
-//                 padding: "8px 12px",
-//                 marginRight: "10px",
-//               }}
-//             >
-//               Re-record
-//             </button>
-
-//             <button
-//               onClick={async () => {
-//                 const audioBlob = new Blob(chunksRef.current, {
-//                   type: mediaRecorderRef.current.mimeType,
-//                 });
-
-//                 await uploadAudio(audioBlob);
-//                 nextSentence();
-//               }}
-//               style={{
-//                 backgroundColor: "#22c55e",
-//                 color: "white",
-//                 padding: "8px 12px",
-//               }}
-//             >
-//               Save & Next
-//             </button>
-//           </div>
-//         </div>
-//       )}
-
-//     </div>
-//   );
-// }
