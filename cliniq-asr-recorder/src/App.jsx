@@ -2669,32 +2669,31 @@ export default function App() {
     <div style={{ padding: "20px", maxWidth: "600px", margin: "auto", fontFamily: "sans-serif" }}>
       <h1 style={{ textAlign: "center", color: "#E32227" }}>CLINIQ-FLOW</h1>
 
-      {/* THE CRUCIAL INSTRUCTIONS */}
+      {/* INSTRUCTIONS */}
       <div style={{ backgroundColor: "#fff3cd", border: "1px solid #ffeeba", padding: "15px", borderRadius: "8px", marginBottom: "20px", fontSize: "14px" }}>
         <h4 style={{ margin: "0 0 10px 0" }}>IMPORTANT INSTRUCTIONS</h4>
         <ul style={{ margin: 0, paddingLeft: "20px" }}>
-          <li>Ensure you are in a <strong>quiet room</strong>.</li>
-          <li>Enter <strong>Speaker ID</strong> first (e.g., SPK001).</li>
-          <li>Click <strong>START RECORDING</strong>, wait 1 second, then speak clearly.</li>
-          <li>Click <strong>STOP RECORDING</strong> immediately after you finish speaking.</li>
-          <li><strong>Conversation Mode:</strong> Use "Generate ID" ONLY for free-form talking. Otherwise, leave it empty.</li>
-          <li>Listen to your recording before clicking <strong>SAVE & NEXT</strong>.</li>
+          <li>Ensure you are in a <strong>quiet room</strong> if possible.</li>
+          <li>Enter <strong>Speaker ID</strong> (e.g., SPK001) first.</li>
+          <li><strong>Conversation Mode:</strong> Click "Generate ID" ONLY for free talking.</li>
+          <li>If recording sentences, leave the Session ID box <strong>EMPTY</strong>.</li>
+          <li>Don't forget to click <strong>SAVE & NEXT</strong> after recording.</li>
         </ul>
       </div>
 
-      {/* PRIMARY INPUTS */}
+      {/* INPUTS */}
       <div style={{ marginBottom: "20px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
-        <div style={{ flex: "1", minWidth: "200px" }}>
-          <label style={{ fontSize: "12px", fontWeight: "bold" }}>SPEAKER ID</label>
+        <div style={{ flex: "1", minWidth: "150px" }}>
+          <label style={{ fontSize: "11px", fontWeight: "bold" }}>SPEAKER ID</label>
           <input 
             placeholder="e.g. SPK001" 
             value={speakerId} 
-            onChange={(e)=>setSessionId("") || setSpeakerId(e.target.value.toUpperCase())} 
+            onChange={(e)=>setSpeakerId(e.target.value.toUpperCase())} 
             style={{ width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc", boxSizing: "border-box" }}
           />
         </div>
         <div>
-          <label style={{ fontSize: "12px", fontWeight: "bold" }}>LANGUAGE</label>
+          <label style={{ fontSize: "11px", fontWeight: "bold" }}>LANGUAGE</label>
           <select value={language} onChange={(e)=>setLanguage(e.target.value)} style={{ display: "block", padding: "10px", width: "100%" }}>
             <option value="english">English</option>
             <option value="yoruba">Yoruba</option>
@@ -2703,7 +2702,7 @@ export default function App() {
           </select>
         </div>
         <div>
-          <label style={{ fontSize: "12px", fontWeight: "bold" }}>ROLE</label>
+          <label style={{ fontSize: "11px", fontWeight: "bold" }}>ROLE</label>
           <select value={role} onChange={(e)=>setRole(e.target.value)} style={{ display: "block", padding: "10px", width: "100%" }}>
             <option value="doctor">Doctor</option>
             <option value="patient">Patient</option>
@@ -2711,91 +2710,41 @@ export default function App() {
         </div>
       </div>
 
-      {/* SESSION CONFIGURATION */}
-      <div style={{ backgroundColor: "#f8f9fa", padding: "20px", borderRadius: "10px", border: "2px solid #dee2e6", marginBottom: "25px" }}>
-        <label style={{ fontSize: "14px", fontWeight: "bold", color: "#333", display: "block", marginBottom: "10px" }}>
-          STEP 2: CHOOSE YOUR MODE
-        </label>
-        
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          
-          {/* Option A: Sentences */}
-          {!sessionId && (
-            <div style={{ padding: "10px", border: "1px dashed #ccc", borderRadius: "5px", backgroundColor: "#fff" }}>
-              <p style={{ margin: 0, fontSize: "13px", color: "#666" }}>
-                <strong>Current Mode:</strong> Reading Sentences (Script is visible below)
-              </p>
-            </div>
-          )}
-
-          {/* THE BIG BUTTON */}
-          <button 
-            onClick={generateSessionId} 
-            style={{ 
-              width: "100%", 
-              padding: "12px", 
-              backgroundColor: "#007bff", 
-              color: "white", 
-              border: "none", 
-              borderRadius: "5px", 
-              fontWeight: "bold",
-              cursor: "pointer",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-            }}
-          >
-            CLICK HERE FOR CONVERSATION MODE (FREE TALKING)
-          </button>
-
-          {/* THE INPUT BOX */}
-          <div style={{ marginTop: "5px" }}>
-            <label style={{ fontSize: "11px", color: "#555" }}>SESSION ID (Auto-fills when you click the blue button):</label>
-            <input 
-              value={sessionId} 
-              onChange={(e)=>setSessionId(e.target.value)} 
-              placeholder="--- EMPTY (SENTENCE MODE) ---" 
-              style={{ 
-                width: "100%", 
-                marginTop: "5px", 
-                padding: "12px", 
-                border: "2px solid " + (sessionId ? "#28a745" : "#ccc"), 
-                borderRadius: "5px", 
-                boxSizing: "border-box",
-                textAlign: "center",
-                fontWeight: "bold",
-                backgroundColor: sessionId ? "#eafff0" : "#fff"
-              }}
-            />
-          </div>
-
-          {sessionId && (
-            <button 
-              onClick={() => setSessionId("")} 
-              style={{ fontSize: "12px", color: "#dc3545", background: "none", border: "none", textDecoration: "underline", cursor: "pointer" }}
-            >
-              Switch back to Sentence Mode (Clear ID)
-            </button>
-          )}
-        </div>
+      {/* SESSION ID BOX */}
+      <div style={{ backgroundColor: "#f8f9fa", padding: "15px", borderRadius: "8px", border: "1px solid #dee2e6", marginBottom: "20px" }}>
+        <button 
+          onClick={generateSessionId} 
+          style={{ float: "right", padding: "5px 12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}
+        >
+          Generate ID
+        </button>
+        <label style={{ fontSize: "11px", fontWeight: "bold" }}>SESSION ID (CONVERSATION MODE)</label>
+        <input 
+          value={sessionId} 
+          onChange={(e)=>setSessionId(e.target.value)} 
+          placeholder="LEAVE EMPTY FOR SENTENCES" 
+          style={{ width: "100%", marginTop: "5px", padding: "10px", border: "1px solid " + (sessionId ? "#28a745" : "#ccc"), borderRadius: "5px", boxSizing: "border-box", backgroundColor: sessionId ? "#eafff0" : "#fff" }}
+        />
       </div>
 
-      {/* TEXT TO READ AREA */}
+      {/* TEXT DISPLAY */}
       <div style={{ minHeight: "120px", background: "#ffffff", border: "2px solid #E32227", padding: "20px", borderRadius: "8px", marginBottom: "20px", textAlign: "center" }}>
         {sessionId ? (
           <div style={{ color: "#28a745" }}>
             <h3 style={{ margin: "0" }}>CONVERSATION MODE ACTIVE</h3>
-            <p style={{ color: "#666", fontSize: "14px" }}>Script hidden. Record natural conversation between Doctor and Patient.</p>
+            <p style={{ color: "#666", fontSize: "14px" }}>Script hidden. Record natural chat. No need to pause for interruptions.</p>
           </div>
         ) : (
           <>
-            <span style={{ color: "#666", fontSize: "11px", fontWeight: "bold" }}>CURRENT SENTENCE: {currentIndex + 1}</span>
-            <p style={{ fontSize: "22px", fontWeight: "bold", margin: "10px 0", lineHeight: "1.4" }}>
-              {sentences[language]?.[role]?.[currentIndex] || "Select a language to load script."}
+            <span style={{ color: "#666", fontSize: "11px", fontWeight: "bold" }}>SENTENCE {currentIndex + 1}</span>
+            <p style={{ fontSize: "20px", fontWeight: "bold", margin: "10px 0", lineHeight: "1.4" }}>
+              {sentences[language]?.[role]?.[currentIndex] || "Loading script..."}
             </p>
           </>
         )}
       </div>
 
-      {/* RECORDING CONTROLS */}
+      {/* RECORD BUTTON */}
       <button 
         onClick={isRecording ? () => mediaRecorderRef.current.stop() : startRecording}
         style={{ 
@@ -2813,12 +2762,10 @@ export default function App() {
         {isRecording ? "STOP RECORDING" : "START RECORDING"}
       </button>
 
-      {/* REVIEW AND UPLOAD */}
+      {/* REVIEW AND SAVE */}
       {audioURL && (
-        <div style={{ marginTop: "20px", padding: "15px", border: "1px solid #ddd", borderRadius: "8px", backgroundColor: "#fff" }}>
-          <label style={{ fontSize: "12px", fontWeight: "bold", display: "block", marginBottom: "5px" }}>REVIEW RECORDING:</label>
+        <div style={{ marginTop: "20px", padding: "15px", border: "1px solid #ddd", borderRadius: "8px" }}>
           <audio src={audioURL} controls style={{ width: "100%" }} />
-          
           <button 
             onClick={async () => {
               const blob = new Blob(chunksRef.current, {type: mediaRecorderRef.current.mimeType});
@@ -2829,28 +2776,204 @@ export default function App() {
               }
             }}
             disabled={isUploading}
-            style={{ 
-              width: "100%", 
-              marginTop: "15px", 
-              padding: "15px", 
-              backgroundColor: "#28a745", 
-              color: "white", 
-              border: "none", 
-              borderRadius: "8px", 
-              fontWeight: "bold",
-              cursor: isUploading ? "not-allowed" : "pointer"
-            }}
+            style={{ width: "100%", marginTop: "10px", padding: "15px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "8px", fontWeight: "bold" }}
           >
             {isUploading ? "UPLOADING..." : "SAVE & NEXT"}
           </button>
         </div>
       )}
 
-      {error && (
-        <div style={{ color: "#dc3545", textAlign: "center", fontWeight: "bold", marginTop: "15px", padding: "10px", border: "1px solid #dc3545", borderRadius: "5px" }}>
-          {error}
-        </div>
-      )}
+      {error && <p style={{ color: "#dc3545", textAlign: "center", fontWeight: "bold", marginTop: "10px" }}>{error}</p>}
     </div>
   );
 }
+
+//   return (
+//     <div style={{ padding: "20px", maxWidth: "600px", margin: "auto", fontFamily: "sans-serif" }}>
+//       <h1 style={{ textAlign: "center", color: "#E32227" }}>CLINIQ-FLOW</h1>
+
+//       {/* THE CRUCIAL INSTRUCTIONS */}
+//       <div style={{ backgroundColor: "#fff3cd", border: "1px solid #ffeeba", padding: "15px", borderRadius: "8px", marginBottom: "20px", fontSize: "14px" }}>
+//         <h4 style={{ margin: "0 0 10px 0" }}>IMPORTANT INSTRUCTIONS</h4>
+//         <ul style={{ margin: 0, paddingLeft: "20px" }}>
+//           <li>Ensure you are in a <strong>quiet room</strong>.</li>
+//           <li>Enter <strong>Speaker ID</strong> first (e.g., SPK001).</li>
+//           <li>Click <strong>START RECORDING</strong>, wait 1 second, then speak clearly.</li>
+//           <li>Click <strong>STOP RECORDING</strong> immediately after you finish speaking.</li>
+//           <li><strong>Conversation Mode:</strong> Use "Generate ID" ONLY for free-form talking. Otherwise, leave it empty.</li>
+//           <li>Listen to your recording before clicking <strong>SAVE & NEXT</strong>.</li>
+//         </ul>
+//       </div>
+
+//       {/* PRIMARY INPUTS */}
+//       <div style={{ marginBottom: "20px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
+//         <div style={{ flex: "1", minWidth: "200px" }}>
+//           <label style={{ fontSize: "12px", fontWeight: "bold" }}>SPEAKER ID</label>
+//           <input 
+//             placeholder="e.g. SPK001" 
+//             value={speakerId} 
+//             onChange={(e)=>setSessionId("") || setSpeakerId(e.target.value.toUpperCase())} 
+//             style={{ width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc", boxSizing: "border-box" }}
+//           />
+//         </div>
+//         <div>
+//           <label style={{ fontSize: "12px", fontWeight: "bold" }}>LANGUAGE</label>
+//           <select value={language} onChange={(e)=>setLanguage(e.target.value)} style={{ display: "block", padding: "10px", width: "100%" }}>
+//             <option value="english">English</option>
+//             <option value="yoruba">Yoruba</option>
+//             <option value="pidgin">Pidgin</option>
+//             <option value="mixed">Mixed (Conv. Only)</option>
+//           </select>
+//         </div>
+//         <div>
+//           <label style={{ fontSize: "12px", fontWeight: "bold" }}>ROLE</label>
+//           <select value={role} onChange={(e)=>setRole(e.target.value)} style={{ display: "block", padding: "10px", width: "100%" }}>
+//             <option value="doctor">Doctor</option>
+//             <option value="patient">Patient</option>
+//           </select>
+//         </div>
+//       </div>
+
+//       {/* SESSION CONFIGURATION */}
+//       <div style={{ backgroundColor: "#f8f9fa", padding: "20px", borderRadius: "10px", border: "2px solid #dee2e6", marginBottom: "25px" }}>
+//         <label style={{ fontSize: "14px", fontWeight: "bold", color: "#333", display: "block", marginBottom: "10px" }}>
+//           STEP 2: CHOOSE YOUR MODE
+//         </label>
+        
+//         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          
+//           {/* Option A: Sentences */}
+//           {!sessionId && (
+//             <div style={{ padding: "10px", border: "1px dashed #ccc", borderRadius: "5px", backgroundColor: "#fff" }}>
+//               <p style={{ margin: 0, fontSize: "13px", color: "#666" }}>
+//                 <strong>Current Mode:</strong> Reading Sentences (Script is visible below)
+//               </p>
+//             </div>
+//           )}
+
+//           {/* THE BIG BUTTON */}
+//           <button 
+//             onClick={generateSessionId} 
+//             style={{ 
+//               width: "100%", 
+//               padding: "12px", 
+//               backgroundColor: "#007bff", 
+//               color: "white", 
+//               border: "none", 
+//               borderRadius: "5px", 
+//               fontWeight: "bold",
+//               cursor: "pointer",
+//               boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+//             }}
+//           >
+//             CLICK HERE FOR CONVERSATION MODE (FREE TALKING)
+//           </button>
+
+//           {/* THE INPUT BOX */}
+//           <div style={{ marginTop: "5px" }}>
+//             <label style={{ fontSize: "11px", color: "#555" }}>SESSION ID (Auto-fills when you click the blue button):</label>
+//             <input 
+//               value={sessionId} 
+//               onChange={(e)=>setSessionId(e.target.value)} 
+//               placeholder="--- EMPTY (SENTENCE MODE) ---" 
+//               style={{ 
+//                 width: "100%", 
+//                 marginTop: "5px", 
+//                 padding: "12px", 
+//                 border: "2px solid " + (sessionId ? "#28a745" : "#ccc"), 
+//                 borderRadius: "5px", 
+//                 boxSizing: "border-box",
+//                 textAlign: "center",
+//                 fontWeight: "bold",
+//                 backgroundColor: sessionId ? "#eafff0" : "#fff"
+//               }}
+//             />
+//           </div>
+
+//           {sessionId && (
+//             <button 
+//               onClick={() => setSessionId("")} 
+//               style={{ fontSize: "12px", color: "#dc3545", background: "none", border: "none", textDecoration: "underline", cursor: "pointer" }}
+//             >
+//               Switch back to Sentence Mode (Clear ID)
+//             </button>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* TEXT TO READ AREA */}
+//       <div style={{ minHeight: "120px", background: "#ffffff", border: "2px solid #E32227", padding: "20px", borderRadius: "8px", marginBottom: "20px", textAlign: "center" }}>
+//         {sessionId ? (
+//           <div style={{ color: "#28a745" }}>
+//             <h3 style={{ margin: "0" }}>CONVERSATION MODE ACTIVE</h3>
+//             <p style={{ color: "#666", fontSize: "14px" }}>Script hidden. Record natural conversation between Doctor and Patient.</p>
+//           </div>
+//         ) : (
+//           <>
+//             <span style={{ color: "#666", fontSize: "11px", fontWeight: "bold" }}>CURRENT SENTENCE: {currentIndex + 1}</span>
+//             <p style={{ fontSize: "22px", fontWeight: "bold", margin: "10px 0", lineHeight: "1.4" }}>
+//               {sentences[language]?.[role]?.[currentIndex] || "Select a language to load script."}
+//             </p>
+//           </>
+//         )}
+//       </div>
+
+//       {/* RECORDING CONTROLS */}
+//       <button 
+//         onClick={isRecording ? () => mediaRecorderRef.current.stop() : startRecording}
+//         style={{ 
+//           width: "100%", 
+//           padding: "20px", 
+//           fontSize: "18px", 
+//           fontWeight: "bold", 
+//           backgroundColor: isRecording ? "#dc3545" : "#212529", 
+//           color: "white", 
+//           border: "none", 
+//           borderRadius: "8px", 
+//           cursor: "pointer" 
+//         }}
+//       >
+//         {isRecording ? "STOP RECORDING" : "START RECORDING"}
+//       </button>
+
+//       {/* REVIEW AND UPLOAD */}
+//       {audioURL && (
+//         <div style={{ marginTop: "20px", padding: "15px", border: "1px solid #ddd", borderRadius: "8px", backgroundColor: "#fff" }}>
+//           <label style={{ fontSize: "12px", fontWeight: "bold", display: "block", marginBottom: "5px" }}>REVIEW RECORDING:</label>
+//           <audio src={audioURL} controls style={{ width: "100%" }} />
+          
+//           <button 
+//             onClick={async () => {
+//               const blob = new Blob(chunksRef.current, {type: mediaRecorderRef.current.mimeType});
+//               if (await uploadAudio(blob, recordedDuration)) {
+//                 setAudioURL(null);
+//                 if (!sessionId) setCurrentIndex(prev => prev + 1);
+//                 alert("Saved Successfully!");
+//               }
+//             }}
+//             disabled={isUploading}
+//             style={{ 
+//               width: "100%", 
+//               marginTop: "15px", 
+//               padding: "15px", 
+//               backgroundColor: "#28a745", 
+//               color: "white", 
+//               border: "none", 
+//               borderRadius: "8px", 
+//               fontWeight: "bold",
+//               cursor: isUploading ? "not-allowed" : "pointer"
+//             }}
+//           >
+//             {isUploading ? "UPLOADING..." : "SAVE & NEXT"}
+//           </button>
+//         </div>
+//       )}
+
+//       {error && (
+//         <div style={{ color: "#dc3545", textAlign: "center", fontWeight: "bold", marginTop: "15px", padding: "10px", border: "1px solid #dc3545", borderRadius: "5px" }}>
+//           {error}
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
