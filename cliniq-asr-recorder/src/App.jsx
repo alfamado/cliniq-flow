@@ -2670,7 +2670,7 @@ export default function App() {
       <h1 style={{ textAlign: "center", color: "#E32227" }}>CLINIQ-FLOW</h1>
 
       {/* INSTRUCTIONS */}
-      <div style={{ backgroundColor: "#fff3cd", border: "1px solid #ffeeba", padding: "15px", borderRadius: "8px", marginBottom: "20px", fontSize: "14px" }}>
+      <div style={{ backgroundColor: "#E32227", border: "1px solid #ffeeba", padding: "15px", borderRadius: "8px", marginBottom: "20px", fontSize: "14px" }}>
         <h4 style={{ margin: "0 0 10px 0" }}>IMPORTANT INSTRUCTIONS</h4>
         <ul style={{ margin: 0, paddingLeft: "20px" }}>
           <li>Ensure you are in a <strong>quiet room</strong> if possible.</li>
@@ -2736,7 +2736,7 @@ export default function App() {
           </div>
         ) : (
           <>
-            <span style={{ color: "#666", fontSize: "11px", fontWeight: "bold" }}>SENTENCE {currentIndex + 1}</span>
+            <span style={{ color: "#28a745", fontSize: "11px", fontWeight: "bold" }}>SENTENCE {currentIndex + 1}</span>
             <p style={{ fontSize: "20px", fontWeight: "bold", margin: "10px 0", lineHeight: "1.4" }}>
               {sentences[language]?.[role]?.[currentIndex] || "Loading script..."}
             </p>
