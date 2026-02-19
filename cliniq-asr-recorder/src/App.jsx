@@ -2711,7 +2711,7 @@ export default function App() {
       </div>
 
       {/* SESSION ID BOX */}
-      <div style={{ backgroundColor: "#f8f9fa", padding: "15px", borderRadius: "8px", border: "1px solid #dee2e6", marginBottom: "20px" }}>
+      <div style={{ backgroundColor: "#dc3545", padding: "15px", borderRadius: "8px", border: "1px solid #dee2e6", marginBottom: "20px" }}>
         <button 
           onClick={generateSessionId} 
           style={{ float: "right", padding: "5px 12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}
