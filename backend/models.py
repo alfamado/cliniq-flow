@@ -26,7 +26,7 @@ class Recording(Base):
     uploaded_at = Column(DateTime, default=func.now())
 
     __table_args__ = (
-        UniqueConstraint("speaker_id", "sentence_id", name="uix_speaker_sentence"),
+        UniqueConstraint("speaker_id", "sentence_id", "language", "role", name="uix_speaker_sentence_lang_role"),
     )
 
 
