@@ -2722,9 +2722,12 @@ export default function App() {
         <input 
           value={sessionId} 
           onChange={(e)=>setSessionId(e.target.value)} 
-          placeholder="LEAVE EMPTY FOR SENTENCES" 
+          placeholder="EMPTY = SENTENCE MODE | ID = CONVERSATION MODE" 
           style={{ width: "100%", marginTop: "5px", padding: "10px", border: "1px solid " + (sessionId ? "#28a745" : "#ccc"), borderRadius: "5px", boxSizing: "border-box", backgroundColor: sessionId ? "#eafff0" : "#fff" }}
         />
+        <small style={{ color: "black", fontWeight: "bold", fontSize: "15px" }}>
+          *Do NOT generate an ID if you are just reading the sentences below.
+        </small>
       </div>
 
       {/* TEXT DISPLAY */}
