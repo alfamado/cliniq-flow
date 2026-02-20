@@ -2690,7 +2690,7 @@ export default function App() {
 
   return (
     <div style={{ padding: "20px", maxWidth: "600px", margin: "auto", fontFamily: "sans-serif" }}>
-      <h1 style={{ textAlign: "center", color: "#1E1E1E" }}>CLINIQ-FLOW</h1>
+      <h1 style={{ textAlign: "center", color: "#FFB800" }}>CLINIQ-FLOW</h1>
 
       {/* INSTRUCTIONS */}
       <div style={{ backgroundColor: "#22E33E", border: "1px solid #1E1E1E", padding: "15px", borderRadius: "8px", marginBottom: "20px", fontSize: "14px" }}>
@@ -2763,7 +2763,7 @@ export default function App() {
           </div>
         ) : (
           <>
-            <span style={{ color: "#212529", fontSize: "11px", fontWeight: "bold" }}>SENTENCE {currentIndex + 1}</span>
+            <span style={{ color: "#212529", fontSize: "15px", fontWeight: "bold" }}>SENTENCE {currentIndex + 1}</span>
             <p style={{ fontSize: "20px", fontWeight: "bold", margin: "10px 0", lineHeight: "1.4" }}>
               {sentences[language]?.[role]?.[currentIndex] || "Loading script..."}
             </p>
