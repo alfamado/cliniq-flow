@@ -2600,8 +2600,31 @@ export default function App() {
       try {
         const response = await fetch(`https://cliniq-flow-backend.onrender.com/progress/${speakerId}?language=${language}&role=${role}`);
         const data = await response.json();
-        if (data.next_sentence) setCurrentIndex(data.next_sentence - 1);
-      } catch (err) { console.error(err); }
+        
+        if (data.next_sentence) {
+          const nextIdx = data.next_sentence - 1;
+          
+          // IF SENTENCE IS NOT 1: Warn the user loudly
+          if (nextIdx > 0 && !sessionId) {
+            const msg = `ID ALREADY IN USE: ${speakerId} is on Sentence ${data.next_sentence}. 
+            If this is NOT you, please change the Speaker ID now!`;
+            
+            setError(msg);
+            alert(msg); // Forced pop-up so they can't ignore it
+          } else {
+            setError(""); // Clear error if it's a fresh ID
+          }
+          
+          setCurrentIndex(nextIdx);
+        }
+      } catch (err) { 
+        console.error("Progress fetch failed:", err); 
+      }
+      // try {
+      //   const response = await fetch(`https://cliniq-flow-backend.onrender.com/progress/${speakerId}?language=${language}&role=${role}`);
+      //   const data = await response.json();
+      //   if (data.next_sentence) setCurrentIndex(data.next_sentence - 1);
+      // } catch (err) { console.error(err); }
     };
     fetchProgress();
   }, [speakerId, language, role]);
@@ -2678,6 +2701,7 @@ export default function App() {
           <li><strong>Conversation Mode:</strong> Click "Generate ID" ONLY for free talking.</li>
           <li>If recording sentences, leave the Session ID box <strong>EMPTY</strong>.</li>
           <li>Don't forget to click <strong>SAVE & NEXT</strong> after recording.</li>
+          <li><strong>ID Check:</strong> If an alert says "ID TAKEN," pick a new ID (e.g., SPK500).</li>
         </ul>
       </div>
 
