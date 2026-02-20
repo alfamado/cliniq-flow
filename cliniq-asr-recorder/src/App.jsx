@@ -2693,7 +2693,7 @@ export default function App() {
       <h1 style={{ textAlign: "center", color: "#E32227" }}>CLINIQ-FLOW</h1>
 
       {/* INSTRUCTIONS */}
-      <div style={{ backgroundColor: "#E32227", border: "1px solid #ffeeba", padding: "15px", borderRadius: "8px", marginBottom: "20px", fontSize: "14px" }}>
+      <div style={{ backgroundColor: "#22E33E", border: "1px solid #ffeeba", padding: "15px", borderRadius: "8px", marginBottom: "20px", fontSize: "14px" }}>
         <h4 style={{ margin: "0 0 10px 0" }}>IMPORTANT INSTRUCTIONS</h4>
         <ul style={{ margin: 0, paddingLeft: "20px" }}>
           <li>Ensure you are in a <strong>quiet room</strong> if possible.</li>
@@ -2735,7 +2735,7 @@ export default function App() {
       </div>
 
       {/* SESSION ID BOX */}
-      <div style={{ backgroundColor: "#dc3545", padding: "15px", borderRadius: "8px", border: "1px solid #dee2e6", marginBottom: "20px" }}>
+      <div style={{ backgroundColor: "#22E33E", padding: "15px", borderRadius: "8px", border: "1px solid #dee2e6", marginBottom: "20px" }}>
         <button 
           onClick={generateSessionId} 
           style={{ float: "right", padding: "5px 12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}
@@ -2755,7 +2755,7 @@ export default function App() {
       </div>
 
       {/* TEXT DISPLAY */}
-      <div style={{ minHeight: "120px", background: "#E32227", border: "2px solid #ffffff", padding: "20px", borderRadius: "8px", marginBottom: "20px", textAlign: "center" }}>
+      <div style={{ minHeight: "120px", background: "#22E33E", border: "2px solid #ffffff", padding: "20px", borderRadius: "8px", marginBottom: "20px", textAlign: "center" }}>
         {sessionId ? (
           <div style={{ color: "#28a745" }}>
             <h3 style={{ margin: "0" }}>CONVERSATION MODE ACTIVE</h3>
