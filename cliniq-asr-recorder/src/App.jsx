@@ -2690,10 +2690,10 @@ export default function App() {
 
   return (
     <div style={{ padding: "20px", maxWidth: "600px", margin: "auto", fontFamily: "sans-serif" }}>
-      <h1 style={{ textAlign: "center", color: "#E32227" }}>CLINIQ-FLOW</h1>
+      <h1 style={{ textAlign: "center", color: "#1E1E1E" }}>CLINIQ-FLOW</h1>
 
       {/* INSTRUCTIONS */}
-      <div style={{ backgroundColor: "#22E33E", border: "1px solid #ffeeba", padding: "15px", borderRadius: "8px", marginBottom: "20px", fontSize: "14px" }}>
+      <div style={{ backgroundColor: "#22E33E", border: "1px solid #1E1E1E", padding: "15px", borderRadius: "8px", marginBottom: "20px", fontSize: "14px" }}>
         <h4 style={{ margin: "0 0 10px 0" }}>IMPORTANT INSTRUCTIONS</h4>
         <ul style={{ margin: 0, paddingLeft: "20px" }}>
           <li>Ensure you are in a <strong>quiet room</strong> if possible.</li>
