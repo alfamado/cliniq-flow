@@ -176,8 +176,9 @@ async def upload_conversation(
         public_url = f"{os.getenv('SUPABASE_URL')}/storage/v1/object/public/audio-recordings/{storage_path}"
 
         # 1. Ensure the speaker exists first to satisfy the Foreign Key
+        numeric_speaker_id = int(speaker_id.replace("SPK", ""))
         speaker_stmt = pg_insert(Speaker).values(
-            id=speaker_id
+            id=numeric_speaker_id
         ).on_conflict_do_nothing() # If they already exist, skip this
 
         db.execute(speaker_stmt)
@@ -185,7 +186,7 @@ async def upload_conversation(
         # 2. Now run your existing conversation logic
         stmt = pg_insert(Conversation).values(
             session_id=session_id,
-            speaker_id=speaker_id,
+            speaker_id=numeric_speaker_id,
             role=role.lower(),
             language=language.lower(),
             duration_seconds=duration_seconds,
